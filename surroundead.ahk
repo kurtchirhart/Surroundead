@@ -6,6 +6,10 @@ SetWorkingDir %A_ScriptDir%
 TargetWindow := "ahk_exe Surroundead-Win64-Shipping.exe"
 Menu, Tray, Icon, shell32.dll, 42 
 
+; --- Menu Setup ---
+Menu, FileMenu, Add, &Reload Script, ReloadRoutine
+Gui, Main: Menu, FileMenu
+
 ; --- GUI Setup ---
 Gui, Main: +AlwaysOnTop
 Gui, Main: Font, s10, Segoe UI
@@ -25,6 +29,11 @@ Gui, Main: Show,, Surroundead Fisher
 ; --- Tracker Box Setup ---
 Gui, Tracker: +AlwaysOnTop -Caption +ToolWindow +E0x20 
 Gui, Tracker: Color, Red
+return
+
+; --- Menu Routine ---
+ReloadRoutine:
+Reload
 return
 
 ; --- Controls ---
