@@ -3,34 +3,38 @@
 SetWorkingDir %A_ScriptDir%
 
 ; --- Configuration ---
-; Updated based on your Window Spy screenshot
 TargetWindow := "ahk_exe Surroundead-Win64-Shipping.exe"
 Menu, Tray, Icon, shell32.dll, 42 
 
 ; --- GUI Setup ---
-Gui, +AlwaysOnTop
-Gui, Font, s10, Segoe UI
-Gui, Add, Text,, Cast Wait (ms):
-Gui, Add, Edit, vCastWait, 9000
-Gui, Add, Text,, Reel Delay (ms):
-Gui, Add, Edit, vReelDelay, 500
-Gui, Add, Text, vStatusText w200 cRed, Status: Stopped
-Gui, Add, Text, vSubStatus w200 cGray, [Idle]
+Gui, Main: +AlwaysOnTop
+Gui, Main: Font, s10, Segoe UI
+Gui, Main: Add, Text,, Reel Delay (ms):
+Gui, Main: Add, Edit, vReelDelay, 1000
+Gui, Main: Add, Text,, Detector X Offset:
+Gui, Main: Add, Edit, vPosX, 1800
+Gui, Main: Add, Text,, Detector Y Offset:
+Gui, Main: Add, Edit, vPosY, 500
+Gui, Main: Add, Text, vStatusText w200 cRed, Status: Stopped
+Gui, Main: Add, Text, vSubStatus w200 cGray, [Idle]
 
-Gui, Add, Button, gStart Default w80, Start (F1)
-Gui, Add, Button, gStop x+10 w80, Stop (F2)
+Gui, Main: Add, Button, gStart Default w80, Start (F1)
+Gui, Main: Add, Button, gStop x+10 w80, Stop (F2)
+Gui, Main: Show,, Surroundead Fisher
 
-Gui, Show,, Surroundead Fisher
+; --- Tracker Box Setup ---
+Gui, Tracker: +AlwaysOnTop -Caption +ToolWindow +E0x20 
+Gui, Tracker: Color, Red
 return
 
 ; --- Controls ---
 
 F1::
 Start:
-Gui, Submit, NoHide
+Gui, Main: Submit, NoHide
 Running := true
-GuiControl,, StatusText, Status: FISHING...
-GuiControl, +cGreen, StatusText
+GuiControl, Main:, StatusText, Status: FISHING...
+GuiControl, Main: +cGreen, StatusText
 Loop
 {
     if !Running
@@ -38,30 +42,51 @@ Loop
     
     if WinActive(TargetWindow)
     {
-        ; CASTING
-        GuiControl,, SubStatus, Casting line...
-        ; Using 'Down' and 'Up' to ensure the game registers the input
+        GuiControl, Main:, SubStatus, Casting line...
+        ControlClick,, %TargetWindow%,,,, R D
+        Sleep, 100
+        ControlClick,, %TargetWindow%,,,, R U
+        Sleep, 2000 
+        
+        GuiControl, Main:, SubStatus, Scanning for bite...
+        Gui, Tracker: Color, Red
+        ; Uses the X and Y values from your GUI
+        Gui, Tracker: Show, x%PosX% y%PosY% w12 h12 NoActivate
+        
+        Loop 
+        {
+            if !Running
+                break
+            
+            ; 1. Search for Dark/Black with 15 shades of variation
+            PixelSearch, Px, Py, PosX-20, PosY-20, PosX+20, PosY+20, 0x050505, 15, Fast RGB
+            DarkFound := !ErrorLevel
+            
+            ; 2. Search for White text (0xFFFFFF)
+            PixelSearch, Px, Py, PosX-20, PosY-20, PosX+20, PosY+20, 0xFFFFFF, 10, Fast RGB
+            WhiteFound := !ErrorLevel
+
+            if (DarkFound or WhiteFound)
+            {
+                Gui, Tracker: Color, Green
+                break
+            }
+            Sleep, 100 
+        }
+        
+        GuiControl, Main:, SubStatus, BITE FOUND! Reeling...
         ControlClick,, %TargetWindow%,,,, R D
         Sleep, 100
         ControlClick,, %TargetWindow%,,,, R U
         
-        Sleep, 1500 
-        
-        ; WAITING
-        GuiControl,, SubStatus, Waiting %CastWait%ms for bite...
-        Sleep, %CastWait%
-        
-        ; REELING
-        GuiControl,, SubStatus, Reeling in...
-        ControlClick,, %TargetWindow%,,,, R D
-        Sleep, 100
-        ControlClick,, %TargetWindow%,,,, R U
-        
+        Sleep, 800 
+        Gui, Tracker: Hide
         Sleep, %ReelDelay%
     }
     else
     {
-        GuiControl,, SubStatus, Paused (Game not focused)
+        GuiControl, Main:, SubStatus, Paused (Focus Game)
+        Gui, Tracker: Hide
         Sleep, 1000 
     }
 }
@@ -70,10 +95,11 @@ return
 F2::
 Stop:
 Running := false
-GuiControl,, StatusText, Status: Stopped
-GuiControl, +cRed, StatusText
-GuiControl,, SubStatus, [Idle]
+GuiControl, Main:, StatusText, Status: Stopped
+GuiControl, Main: +cRed, StatusText
+GuiControl, Main:, SubStatus, [Idle]
+Gui, Tracker: Hide
 return
 
-GuiClose:
+MainGuiClose:
 ExitApp
