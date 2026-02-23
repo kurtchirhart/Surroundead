@@ -24,7 +24,7 @@ Gui, Main: Add, Text,, Detector X Offset:
 Gui, Main: Add, Edit, vPosX gSaveSettings, %PosX%
 Gui, Main: Add, Text,, Detector Y Offset:
 Gui, Main: Add, Edit, vPosY gSaveSettings, %PosY%
-Gui, Main: Add, Text, vStatusText w200 cRed, Status: Stopped
+; Gui, Main: Add, Text, vStatusText w200 cRed, Status: Stopped ; -- Replaced by OSD
 Gui, Main: Add, Text, vSubStatus w200 cGray, [Idle]
 
 Gui, Main: Add, Button, gStart Default w80, Start (F1)
@@ -34,11 +34,26 @@ Gui, Main: Add, Button, gStop x+10 w80, Stop (F2)
 ; --- Tracker Box Setup ---
 Gui, Tracker: +AlwaysOnTop -Caption +ToolWindow +E0x20 
 Gui, Tracker: Color, Red
+
+; --- OSD Setup ---
+Gui, OSD:New, +AlwaysOnTop -Caption +ToolWindow, StatusOSD
+Gui, OSD:Color, 000000
+Gui, OSD:Font, s10 cFFFFFF, Segoe UI
+Gui, OSD:Add, Text, vStatusOSDText w200 cRed, Status: Stopped
+Gui, OSD:Font, s8 cAAAAAA
+Gui, OSD:Add, Text, y+5 w200 gOpenSettings, [Settings]
+SysGet, MonitorWidth, 76
+OSD_Width := 220
+OSD_X := MonitorWidth - OSD_Width
+Gui, OSD:Show, x%OSD_X% y0 W%OSD_Width% NoActivate
+WinSet, Transparent, 150, StatusOSD
+
 return
 
 ; --- Hotkeys & Routines ---
 
 ^!s:: ; Ctrl+Alt+S to show Settings
+OpenSettings:
     Gui, Main:Show
 return
 
@@ -61,8 +76,8 @@ F1::
 Start:
 ; Settings are now saved automatically, no need to submit the GUI here.
 Running := true
-GuiControl, Main:, StatusText, Status: FISHING...
-GuiControl, Main: +cGreen, StatusText
+GuiControl, OSD:, StatusOSDText, Status: FISHING...
+GuiControl, OSD:+cGreen, StatusOSDText
 Loop
 {
     if !Running
@@ -123,8 +138,8 @@ return
 F2::
 Stop:
 Running := false
-GuiControl, Main:, StatusText, Status: Stopped
-GuiControl, Main: +cRed, StatusText
+GuiControl, OSD:, StatusOSDText, Status: Stopped
+GuiControl, OSD:+cRed, StatusOSDText
 GuiControl, Main:, SubStatus, [Idle]
 Gui, Tracker: Hide
 return
