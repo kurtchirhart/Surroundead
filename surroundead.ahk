@@ -110,5 +110,10 @@ GuiControl, Main:, SubStatus, [Idle]
 Gui, Tracker: Hide
 return
 
+; --- Mouse Button Remaps ---
+XButton1::f  ; Browser Back -> f
+XButton2::e  ; Browser Forward -> e
+
+
 MainGuiClose:
 ExitApp
