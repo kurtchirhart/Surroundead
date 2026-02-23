@@ -3,6 +3,11 @@
 SetWorkingDir %A_ScriptDir%
 
 ; --- Configuration ---
+IniFile := A_ScriptDir . "\surroundead.ini"
+IniRead, ReelDelay, %IniFile%, Settings, ReelDelay, 1000
+IniRead, PosX, %IniFile%, Settings, PosX, 1800
+IniRead, PosY, %IniFile%, Settings, PosY, 500
+
 TargetWindow := "ahk_exe Surroundead-Win64-Shipping.exe"
 Menu, Tray, Icon, shell32.dll, 42 
 
@@ -10,37 +15,51 @@ Menu, Tray, Icon, shell32.dll, 42
 Menu, FileMenu, Add, &Reload Script, ReloadRoutine
 Gui, Main: Menu, FileMenu
 
-; --- GUI Setup ---
+; --- GUI Setup (Settings Window) ---
 Gui, Main: +AlwaysOnTop
 Gui, Main: Font, s10, Segoe UI
 Gui, Main: Add, Text,, Reel Delay (ms):
-Gui, Main: Add, Edit, vReelDelay, 1000
+Gui, Main: Add, Edit, vReelDelay gSaveSettings, %ReelDelay%
 Gui, Main: Add, Text,, Detector X Offset:
-Gui, Main: Add, Edit, vPosX, 1800
+Gui, Main: Add, Edit, vPosX gSaveSettings, %PosX%
 Gui, Main: Add, Text,, Detector Y Offset:
-Gui, Main: Add, Edit, vPosY, 500
+Gui, Main: Add, Edit, vPosY gSaveSettings, %PosY%
 Gui, Main: Add, Text, vStatusText w200 cRed, Status: Stopped
 Gui, Main: Add, Text, vSubStatus w200 cGray, [Idle]
 
 Gui, Main: Add, Button, gStart Default w80, Start (F1)
 Gui, Main: Add, Button, gStop x+10 w80, Stop (F2)
-Gui, Main: Show,, Surroundead Fisher
+; The GUI is now created but not shown by default. Use Ctrl+Alt+S to show it.
 
 ; --- Tracker Box Setup ---
 Gui, Tracker: +AlwaysOnTop -Caption +ToolWindow +E0x20 
 Gui, Tracker: Color, Red
 return
 
-; --- Menu Routine ---
+; --- Hotkeys & Routines ---
+
+^!s:: ; Ctrl+Alt+S to show Settings
+    Gui, Main:Show
+return
+
+SaveSettings:
+    Gui, Main:Submit, NoHide
+    IniWrite, %ReelDelay%, %IniFile%, Settings, ReelDelay
+    IniWrite, %PosX%, %IniFile%, Settings, PosX
+    IniWrite, %PosY%, %IniFile%, Settings, PosY
+return
+
+^!r:: ; Ctrl+Alt+R to Reload
 ReloadRoutine:
-Reload
+    ; OSD Stub: Call OSD function here in the future
+    Reload
 return
 
 ; --- Controls ---
 
 F1::
 Start:
-Gui, Main: Submit, NoHide
+; Settings are now saved automatically, no need to submit the GUI here.
 Running := true
 GuiControl, Main:, StatusText, Status: FISHING...
 GuiControl, Main: +cGreen, StatusText
@@ -111,7 +130,9 @@ Gui, Tracker: Hide
 return
 
 MainGuiClose:
-ExitApp
+MainGuiEscape:
+    Gui, Main:Hide
+return
 
 ; --- Mouse Button Remaps ---
 XButton1::f  ; Browser Back -> f
