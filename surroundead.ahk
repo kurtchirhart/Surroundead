@@ -14,11 +14,10 @@ try TraySetIcon "shell32.dll", 42
 ; --- Global State ---
 Running := false
 
+; --- GUI Setup (Settings Window) ---
 ; --- Menu Setup ---
 FileMenu := MenuBar()
 FileMenu.Add("&Reload Script", (*) => Reload())
-
-; --- GUI Setup (Settings Window) ---
 MainGui := Gui("+AlwaysOnTop", "Settings")
 MainGui.MenuBar := FileMenu
 MainGui.SetFont("s10", "Segoe UI")
@@ -42,26 +41,76 @@ TrackerGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
 TrackerGui.BackColor := "Red"
 
 ; --- OSD Setup ---
-OSDGui := Gui("+AlwaysOnTop -Caption +ToolWindow", "StatusOSD")
-OSDGui.BackColor := "000000"
-OSDGui.SetFont("s10 cFFFFFF", "Segoe UI")
-OSDStatusText := OSDGui.Add("Text", "w200 cRed", "Status: Stopped")
-OSDGui.SetFont("s8 cAAAAAA")
-OSDGui.Add("Text", "y+5 w200", "[Settings]").OnEvent("Click", (*) => MainGui.Show())
+; We are using a left and a right GUI to fake a two colum table with
+; left hand buttons and right side status lines
+L_Width := 40
+R_Width := 200
+Padding := 100
 
-OSD_Width := 220
-OSD_X := A_ScreenWidth - OSD_Width
-OSDGui.Show("x" OSD_X " y0 w" OSD_Width " NoActivate")
-WinSetTransparent(150, OSDGui.Hwnd)
+; Calculate X to anchor to the top right
+L_X := A_ScreenWidth - L_Width - R_Width - Padding
+R_X := L_X + L_Width
+
+; Setup
+L_Gui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x02000000")
+R_Gui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x02000000")
+L_Gui.BackColor := R_Gui.BackColor := "1A1A1A"
+L_Gui.SetFont("s12 cWhite")
+R_Gui.SetFont("s12 cWhite")
+
+L_Gui.Add("Text",, "⚙️").OnEvent("Click", (*) => Settings())
+R_Gui.Add("Text",, "Settings (ctrl-alt-s)")
+
+L_Gui.Add("Text",, "🔄").OnEvent("Click", (*) => Reload())
+R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
+
+L_Gui.Add("Text",, "🎣").OnEvent("Click", (*) => ToggleFishing())
+line1 := R_Gui.Add("Text",, "Idle             ")
+
+L_Gui.Add("Text",, "")
+line2 := R_Gui.Add("Text",, "                                  ")
+
+L_Gui.Show("x" L_X " y" Padding " w" L_Width " NoActivate")
+R_Gui.Show("x" R_X " y" Padding " w" R_Width " NoActivate")
+
+ToggleFishing() {
+    line1.Value := "Fishing..."
+    line2.Value := "Wait for bite"
+}
+
+Alpha := 150
+WinSetTransparent(Alpha, L_Gui.Hwnd)
+WinSetTransparent(Alpha, R_Gui.Hwnd)
+
+; Collect some info for our debug window
+L_Gui.GetPos(,,,&OSD_H)
+Width := L_Width + R_Width
+
 
 ; --- Debug OSD Setup ---
+DebugColor := "240000"
 DebugGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20", "DebugOSD")
-DebugGui.BackColor := "000000"
-DebugGui.SetFont("s8 cGray", "Segoe UI")
-DebugText := DebugGui.Add("Text", "w200 h300", "")
-DebugGui.Show("x" OSD_X " y60 w" OSD_Width " NoActivate")
-WinSetTransparent(150, DebugGui.Hwnd)
+DebugGui.BackColor := DebugColor
 
+; Use a monospaced font for logs so they align nicely
+DebugGui.SetFont("s9 cffffff", "Consolas") 
+
+; -E0x200 removes the 3D border, BackColor sets the internal box color
+DebugText := DebugGui.Add("Edit", "w" Width " h300 +ReadOnly +Wrap -E0x200 cffffff")
+DebugText.Opt("Background" . DebugColor) ; This is the correct v2 syntax
+
+LogToGui(NewText) {
+    global DebugText
+    DebugText.Value .= NewText . "`n"
+    SendMessage(0x0115, 7, 0, DebugText.Hwnd, "A") ; WM_VSCROLL to bottom
+}
+
+DebugGui.Show("x" L_X " y" (OSD_H + 20) " NoActivate")
+DebugGui.Hide()
+
+; Loop 91 {
+;     LogToGui("Test line " . A_Index)
+; }
 ; --- Functions ---
 
 SaveSettings(*) {
@@ -85,8 +134,8 @@ StartFishing() {
         return
     
     Running := true
-    OSDStatusText.Value := "Status: FISHING..."
-    OSDStatusText.Opt("+cGreen")
+    line1.Value := "Status: FISHING..."
+    line2.Opt("+cGreen")
     
     Loop {
         if !Running
@@ -144,10 +193,14 @@ StartFishing() {
 StopFishing() {
     global Running
     Running := false
-    OSDStatusText.Value := "Status: Stopped"
-    OSDStatusText.Opt("+cRed")
+    line1.Value := "Status: Stopped"
+    line1.Opt("+cRed")
     LogDebug("[Idle]")
     TrackerGui.Hide()
+}
+
+Settings() {
+    MainGui.Show()
 }
 
 ; --- Hotkeys ---
