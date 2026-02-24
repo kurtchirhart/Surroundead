@@ -65,18 +65,13 @@ L_Gui.Add("Text",, "🔄").OnEvent("Click", (*) => Reload())
 R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
 
 L_Gui.Add("Text",, "🎣").OnEvent("Click", (*) => ToggleFishing())
-line1 := R_Gui.Add("Text",, "Idle             ")
+line1 := R_Gui.Add("Text", "-Wrap", "Start Fishing(F1)")
 
 L_Gui.Add("Text",, "")
 line2 := R_Gui.Add("Text",, "                                  ")
 
 L_Gui.Show("x" L_X " y" Padding " w" L_Width " NoActivate")
-R_Gui.Show("x" R_X " y" Padding " w" R_Width " NoActivate")
-
-ToggleFishing() {
-    line1.Value := "Fishing..."
-    line2.Value := "Wait for bite"
-}
+R_Gui.Show("x" R_X + 10 " y" Padding " w" R_Width " NoActivate")
 
 Alpha := 150
 WinSetTransparent(Alpha, L_Gui.Hwnd)
@@ -105,8 +100,8 @@ LogToGui(NewText) {
     SendMessage(0x0115, 7, 0, DebugText.Hwnd, "A") ; WM_VSCROLL to bottom
 }
 
-DebugGui.Show("x" L_X " y" (OSD_H + 20) " NoActivate")
-DebugGui.Hide()
+DebugGui.Show("x" L_X " y" (OSD_H + Padding + 50) " NoActivate")
+; DebugGui.Hide()
 
 ; Loop 91 {
 ;     LogToGui("Test line " . A_Index)
@@ -128,14 +123,37 @@ LogDebug(Msg) {
     try DebugText.Value := Msg . "`n" . DebugText.Value
 }
 
+F1::ToggleFishing()
+
+ToggleFishing() {
+    global Running
+    if (Running) {
+        StopFishing()
+    } else {
+        ; StartFishing is a loop, so we run it in a new thread 
+        ; to keep the GUI responsive
+        SetTimer(StartFishing, -1) 
+    }
+}
+
+StopFishing() {
+    global Running
+    Running := false
+    LogDebug("[Idle]")
+    line1.Value := "Start fishing(F1)"
+    line1.Opt("+" . "cffffff")
+    TrackerGui.Hide()
+}
+
 StartFishing() {
     global Running
     if Running
         return
     
     Running := true
-    line1.Value := "Status: FISHING..."
-    line2.Opt("+cGreen")
+    ; line1.Opt("-Wrap")
+    line1.Value := "Stop Fishing(F1)"
+    line1.Opt("+" . "caaffaa")
     
     Loop {
         if !Running
@@ -143,12 +161,15 @@ StartFishing() {
             
         if WinActive(TargetWindow) {
             LogDebug("Casting line...")
+            line2.Value := "Casting"
+            line2.Opt("+" . "caaffaa")
             ControlClick(, TargetWindow,,,, "R D")
             Sleep(100)
             ControlClick(, TargetWindow,,,, "R U")
             Sleep(2000)
             
             LogDebug("Scanning for bite...")
+            line2.Value := "Scanning"
             TrackerGui.BackColor := "Red"
             TrackerGui.Show("x" PosX " y" PosY " w12 h12 NoActivate")
             
@@ -175,6 +196,7 @@ StartFishing() {
                 break
 
             LogDebug("BITE FOUND! Reeling...")
+            line2.Value := "Bite! Reeling in!"
             ControlClick(, TargetWindow,,,, "R D")
             Sleep(100)
             ControlClick(, TargetWindow,,,, "R U")
@@ -184,19 +206,13 @@ StartFishing() {
             Sleep(ReelDelay)
         } else {
             LogDebug("Paused (Focus Game)")
+            line2.Value := "Focus Game"
+            line2.Opt("+" . "cffaaaa")
+            Sleep(1000)
             TrackerGui.Hide()
             Sleep(1000)
         }
     }
-}
-
-StopFishing() {
-    global Running
-    Running := false
-    line1.Value := "Status: Stopped"
-    line1.Opt("+cRed")
-    LogDebug("[Idle]")
-    TrackerGui.Hide()
 }
 
 Settings() {
@@ -208,10 +224,6 @@ Settings() {
 ^!s::MainGui.Show()
 
 ^!r::Reload
-
-F1::StartFishing()
-
-F2::StopFishing()
 
 XButton1::f
 XButton2::e
