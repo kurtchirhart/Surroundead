@@ -8,6 +8,7 @@ ReelDelay := IniRead(IniFile, "Settings", "ReelDelay", 1000)
 PosX := IniRead(IniFile, "Settings", "PosX", 1800)
 PosY := IniRead(IniFile, "Settings", "PosY", 500)
 DebugMode := IniRead(IniFile, "Settings", "DebugMode", 0)
+Alpha := IniRead(IniFile, "Settings", "Alpha", 150)
 
 TargetWindow := "ahk_exe Surroundead-Win64-Shipping.exe"
 try TraySetIcon "shell32.dll", 42
@@ -30,6 +31,10 @@ MainGui.Add("Text", "xm w150", "Detector Y Offset:")
 MainGui.Add("Edit", "x+5 yp w100 vPosY", PosY).OnEvent("Change", SaveSettings)
 MainGui.Add("Checkbox", "xm vDebugMode", "Show Debug Log").OnEvent("Click", ToggleDebugFromSettings)
 MainGui["DebugMode"].Value := DebugMode
+MainGui.Add("Text", "xm w150", "OSD Transparency:")
+MainGui.Add("Slider", "x+5 yp w100 vAlpha Range0-255 ToolTip", Alpha).OnEvent("Change", UpdateAlpha)
+MainGui.Add("Button", "xm w125", "Reload Script").OnEvent("Click", (*) => Reload())
+MainGui.Add("Button", "x+10 yp w125", "Close Script").OnEvent("Click", (*) => ExitApp())
 
 
 MainGui.OnEvent("Close", (*) => MainGui.Hide())
@@ -78,7 +83,6 @@ line2 := R_Gui.Add("Text",, "                                  ")
 L_Gui.Show("x" L_X " y" Padding " w" L_Width " NoActivate")
 R_Gui.Show("x" R_X + 10 " y" Padding " w" R_Width " NoActivate")
 
-Alpha := 150
 WinSetTransparent(Alpha, L_Gui.Hwnd)
 WinSetTransparent(Alpha, R_Gui.Hwnd)
 
@@ -123,6 +127,14 @@ SaveSettings(*) {
     IniWrite(ReelDelay, IniFile, "Settings", "ReelDelay")
     IniWrite(PosX, IniFile, "Settings", "PosX")
     IniWrite(PosY, IniFile, "Settings", "PosY")
+}
+
+UpdateAlpha(*) {
+    global Alpha
+    Alpha := MainGui["Alpha"].Value
+    WinSetTransparent(Alpha, L_Gui.Hwnd)
+    WinSetTransparent(Alpha, R_Gui.Hwnd)
+    IniWrite(Alpha, IniFile, "Settings", "Alpha")
 }
 
 LogDebug(Msg) {
