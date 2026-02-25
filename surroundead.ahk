@@ -54,17 +54,17 @@ L_Gui.BackColor := R_Gui.BackColor := "1A1A1A"
 L_Gui.SetFont("s12 cWhite")
 R_Gui.SetFont("s12 cWhite")
 
-L_Gui.Add("Text",, "⚙️").OnEvent("Click", (*) => Settings())
-R_Gui.Add("Text",, "Settings (ctrl-alt-s)")
+L_Gui.Add("Text",, "❌").OnEvent("Click", (*) => ExitApp())
+R_Gui.Add("Text",, "Close Script")
 
-L_Gui.Add("Text",, "🔄").OnEvent("Click", (*) => Reload())
-R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
+L_Gui.Add("Text",, "⚙️").OnEvent("Click", (*) => ToggleSettings())
+R_Gui.Add("Text",, "Settings (ctrl-alt-s)")
 
 L_Gui.Add("Text",, "🐛").OnEvent("Click", (*) => ToggleDebug())
 R_Gui.Add("Text",, "Toggle Debug")
 
-L_Gui.Add("Text",, "❌").OnEvent("Click", (*) => ExitApp())
-R_Gui.Add("Text",, "Close Script")
+L_Gui.Add("Text",, "🔄").OnEvent("Click", (*) => Reload())
+R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
 
 L_Gui.Add("Text",, "🎣").OnEvent("Click", (*) => ToggleFishing())
 line1 := R_Gui.Add("Text", "-Wrap", "Start Fishing(F1)")
@@ -144,6 +144,7 @@ StopFishing() {
     LogDebug("[Idle]")
     line1.Value := "Start fishing(F1)"
     line1.Opt("+" . "cffffff")
+    line2.Value:=""
     TrackerGui.Hide()
 }
 
@@ -217,8 +218,11 @@ StartFishing() {
     }
 }
 
-Settings() {
-    MainGui.Show()
+ToggleSettings() {
+    if WinExist("ahk_id " . MainGui.Hwnd)
+        MainGui.Hide()
+    else
+        MainGui.Show()
 }
 
 ToggleDebug() {
@@ -230,7 +234,7 @@ ToggleDebug() {
 
 ; --- Hotkeys ---
 
-^!s::MainGui.Show()
+^!s::ToggleSettings()
 
 ^!r::Reload
 
