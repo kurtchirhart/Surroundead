@@ -144,8 +144,6 @@ LogDebug(Msg) {
     try DebugText.Value := Msg . "`n" . DebugText.Value
 }
 
-F1::ToggleFishing()
-
 ToggleFishing() {
     global Running
     if (Running) {
@@ -290,9 +288,13 @@ CheckWindowFocus() {
 
 ; --- Hotkeys ---
 
+#HotIf WinActive(TargetWindow)
+F1::ToggleFishing()
+
 ^!s::ToggleSettings()
 
 ^!r::Reload
 
 XButton1::f
 XButton2::e
+#HotIf
