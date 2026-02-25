@@ -7,6 +7,7 @@ IniFile := A_ScriptDir . "\surroundead.ini"
 ReelDelay := IniRead(IniFile, "Settings", "ReelDelay", 1000)
 PosX := IniRead(IniFile, "Settings", "PosX", 1800)
 PosY := IniRead(IniFile, "Settings", "PosY", 500)
+DebugMode := IniRead(IniFile, "Settings", "DebugMode", 0)
 
 TargetWindow := "ahk_exe Surroundead-Win64-Shipping.exe"
 try TraySetIcon "shell32.dll", 42
@@ -27,6 +28,8 @@ MainGui.Add("Text", "xm w150", "Detector X Offset:")
 MainGui.Add("Edit", "x+5 yp w100 vPosX", PosX).OnEvent("Change", SaveSettings)
 MainGui.Add("Text", "xm w150", "Detector Y Offset:")
 MainGui.Add("Edit", "x+5 yp w100 vPosY", PosY).OnEvent("Change", SaveSettings)
+MainGui.Add("Checkbox", "xm vDebugMode", "Show Debug Log").OnEvent("Click", ToggleDebugFromSettings)
+MainGui["DebugMode"].Value := DebugMode
 
 
 MainGui.OnEvent("Close", (*) => MainGui.Hide())
@@ -60,8 +63,8 @@ R_Gui.Add("Text",, "Close Script")
 L_Gui.Add("Text",, "⚙️").OnEvent("Click", (*) => ToggleSettings())
 R_Gui.Add("Text",, "Settings (ctrl-alt-s)")
 
-L_Gui.Add("Text",, "🐛").OnEvent("Click", (*) => ToggleDebug())
-R_Gui.Add("Text",, "Toggle Debug")
+; L_Gui.Add("Text",, "🐛").OnEvent("Click", (*) => ToggleDebug())
+; R_Gui.Add("Text",, "Toggle Debug")
 
 L_Gui.Add("Text",, "🔄").OnEvent("Click", (*) => Reload())
 R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
@@ -103,7 +106,8 @@ LogToGui(NewText) {
 }
 
 DebugGui.Show("x" L_X " y" (OSD_H + Padding + 50) " NoActivate")
-; DebugGui.Hide()
+if !DebugMode
+    DebugGui.Hide()
 
 ; Loop 91 {
 ;     LogToGui("Test line " . A_Index)
@@ -225,8 +229,18 @@ ToggleSettings() {
         MainGui.Show("x50 y50")
 }
 
-ToggleDebug() {
-    if WinExist("ahk_id " . DebugGui.Hwnd)
+ToggleDebug(*) {
+    global DebugMode
+    DebugMode := !DebugMode
+    MainGui["DebugMode"].Value := DebugMode
+    ToggleDebugFromSettings()
+}
+
+ToggleDebugFromSettings(*) {
+    global DebugMode
+    DebugMode := MainGui["DebugMode"].Value
+    IniWrite(DebugMode, IniFile, "Settings", "DebugMode")
+    if !DebugMode
         DebugGui.Hide()
     else
         DebugGui.Show("NoActivate")
