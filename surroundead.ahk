@@ -81,6 +81,9 @@ R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
 L_Gui.Add("Text",, "🎣").OnEvent("Click", (*) => ToggleFishing())
 line1 := R_Gui.Add("Text", "-Wrap", "Start Fishing(F1)")
 
+L_Gui.Add("Text",, "🖱️")
+R_Gui.Add("Text",, "Hold RMB (Ctrl-Alt-RMB)")
+
 L_Gui.Add("Text",, "")
 line2 := R_Gui.Add("Text",, "                                  ")
 
@@ -293,6 +296,8 @@ CheckWindowFocus() {
 
 #HotIf WinActive("ahk_group TargetGroup")
 F1::ToggleFishing()
+
+^!RButton::Send "{RButton down}"
 
 ^!s::ToggleSettings()
 
