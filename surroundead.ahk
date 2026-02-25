@@ -21,12 +21,12 @@ FileMenu.Add("&Reload Script", (*) => Reload())
 MainGui := Gui("+AlwaysOnTop", "Settings")
 MainGui.MenuBar := FileMenu
 MainGui.SetFont("s10", "Segoe UI")
-MainGui.Add("Text",, "Reel Delay (ms):")
-MainGui.Add("Edit", "vReelDelay", ReelDelay).OnEvent("Change", SaveSettings)
-MainGui.Add("Text",, "Detector X Offset:")
-MainGui.Add("Edit", "vPosX", PosX).OnEvent("Change", SaveSettings)
-MainGui.Add("Text",, "Detector Y Offset:")
-MainGui.Add("Edit", "vPosY", PosY).OnEvent("Change", SaveSettings)
+MainGui.Add("Text", "w150", "Reel Delay (ms):")
+MainGui.Add("Edit", "x+5 yp w100 vReelDelay", ReelDelay).OnEvent("Change", SaveSettings)
+MainGui.Add("Text", "xm w150", "Detector X Offset:")
+MainGui.Add("Edit", "x+5 yp w100 vPosX", PosX).OnEvent("Change", SaveSettings)
+MainGui.Add("Text", "xm w150", "Detector Y Offset:")
+MainGui.Add("Edit", "x+5 yp w100 vPosY", PosY).OnEvent("Change", SaveSettings)
 
 
 MainGui.OnEvent("Close", (*) => MainGui.Hide())
@@ -222,7 +222,7 @@ ToggleSettings() {
     if WinExist("ahk_id " . MainGui.Hwnd)
         MainGui.Hide()
     else
-        MainGui.Show()
+        MainGui.Show("x50 y50")
 }
 
 ToggleDebug() {
