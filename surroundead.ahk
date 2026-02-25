@@ -9,6 +9,7 @@ PosX := IniRead(IniFile, "Settings", "PosX", 1800)
 PosY := IniRead(IniFile, "Settings", "PosY", 500)
 DebugMode := IniRead(IniFile, "Settings", "DebugMode", 0)
 Alpha := IniRead(IniFile, "Settings", "Alpha", 150)
+; OSDMode := true
 
 TargetWindows := ["ahk_exe Surroundead-Win64-Shipping.exe", "ahk_exe notepad.exe"]
 for win in TargetWindows
@@ -82,7 +83,7 @@ L_Gui.Add("Text",, "🎣").OnEvent("Click", (*) => ToggleFishing())
 line1 := R_Gui.Add("Text", "-Wrap", "Start Fishing(F1)")
 
 L_Gui.Add("Text",, "🖱️")
-R_Gui.Add("Text",, "Hold RMB (Ctrl-Alt-RMB)")
+R_Gui.Add("Text",, "Hold RMB (Shft-Alt-RMB)")
 
 L_Gui.Add("Text",, "")
 line2 := R_Gui.Add("Text",, "                                  ")
@@ -253,6 +254,19 @@ CloseSettings(*) {
     MainGui.Hide()
 }
 
+ToggleOSD(*) {
+    global OSDMode
+    OSDMode := !OSDMode
+    if !OSDMode {
+        L_Gui.Hide()
+        R_Gui.Hide()
+    } else {
+        L_Gui.Show("NoActivate")
+        R_Gui.Show("NoActivate")
+    }
+    
+}
+
 ToggleDebug(*) {
     global DebugMode
     DebugMode := !DebugMode
@@ -308,7 +322,9 @@ CheckWindowFocus() {
 #HotIf WinActive("ahk_group TargetGroup")
 F1::ToggleFishing()
 
-^!RButton::Send "{RButton down}"
+F2::ToggleOSD()
+
++!RButton::Send "{RButton down}"
 
 ^!s::ToggleSettings()
 
