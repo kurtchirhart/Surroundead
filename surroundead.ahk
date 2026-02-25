@@ -27,11 +27,7 @@ MainGui.Add("Text",, "Detector X Offset:")
 MainGui.Add("Edit", "vPosX", PosX).OnEvent("Change", SaveSettings)
 MainGui.Add("Text",, "Detector Y Offset:")
 MainGui.Add("Edit", "vPosY", PosY).OnEvent("Change", SaveSettings)
-MainGui.Add("Text",, "Status:")
-SubStatusText := MainGui.Add("Text", "w200 cGray", "[Idle]")
 
-MainGui.Add("Button", "w80 Default", "Start (F1)").OnEvent("Click", (*) => StartFishing())
-MainGui.Add("Button", "x+10 w80", "Stop (F2)").OnEvent("Click", (*) => StopFishing())
 
 MainGui.OnEvent("Close", (*) => MainGui.Hide())
 MainGui.OnEvent("Escape", (*) => MainGui.Hide())
@@ -63,6 +59,12 @@ R_Gui.Add("Text",, "Settings (ctrl-alt-s)")
 
 L_Gui.Add("Text",, "🔄").OnEvent("Click", (*) => Reload())
 R_Gui.Add("Text",, "Reload (ctrl-alt-r)")
+
+L_Gui.Add("Text",, "🐛").OnEvent("Click", (*) => ToggleDebug())
+R_Gui.Add("Text",, "Toggle Debug")
+
+L_Gui.Add("Text",, "❌").OnEvent("Click", (*) => ExitApp())
+R_Gui.Add("Text",, "Close Script")
 
 L_Gui.Add("Text",, "🎣").OnEvent("Click", (*) => ToggleFishing())
 line1 := R_Gui.Add("Text", "-Wrap", "Start Fishing(F1)")
@@ -217,6 +219,13 @@ StartFishing() {
 
 Settings() {
     MainGui.Show()
+}
+
+ToggleDebug() {
+    if WinExist("ahk_id " . DebugGui.Hwnd)
+        DebugGui.Hide()
+    else
+        DebugGui.Show("NoActivate")
 }
 
 ; --- Hotkeys ---
