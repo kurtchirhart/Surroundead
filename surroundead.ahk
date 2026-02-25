@@ -10,7 +10,10 @@ PosY := IniRead(IniFile, "Settings", "PosY", 500)
 DebugMode := IniRead(IniFile, "Settings", "DebugMode", 0)
 Alpha := IniRead(IniFile, "Settings", "Alpha", 150)
 
-TargetWindow := "ahk_exe Surroundead-Win64-Shipping.exe"
+TargetWindows := ["ahk_exe Surroundead-Win64-Shipping.exe", "ahk_exe notepad.exe"]
+for win in TargetWindows
+    GroupAdd "TargetGroup", win
+
 try TraySetIcon "shell32.dll", 42
 
 ; --- Global State ---
@@ -179,13 +182,13 @@ StartFishing() {
         if !Running
             break
             
-        if WinActive(TargetWindow) {
+        if (ActiveHwnd := WinActive("ahk_group TargetGroup")) {
             LogDebug("Casting line...")
             line2.Value := "Casting"
             line2.Opt("+" . "caaffaa")
-            ControlClick(, TargetWindow,,,, "R D")
+            ControlClick(, ActiveHwnd,,,, "R D")
             Sleep(100)
-            ControlClick(, TargetWindow,,,, "R U")
+            ControlClick(, ActiveHwnd,,,, "R U")
             Sleep(2000)
             
             LogDebug("Scanning for bite...")
@@ -217,9 +220,9 @@ StartFishing() {
 
             LogDebug("BITE FOUND! Reeling...")
             line2.Value := "Bite! Reeling in!"
-            ControlClick(, TargetWindow,,,, "R D")
+            ControlClick(, ActiveHwnd,,,, "R D")
             Sleep(100)
-            ControlClick(, TargetWindow,,,, "R U")
+            ControlClick(, ActiveHwnd,,,, "R U")
             
             Sleep(800)
             TrackerGui.Hide()
@@ -263,7 +266,7 @@ ToggleDebugFromSettings(*) {
 
 CheckWindowFocus() {
     ; Check if Game or Settings is active
-    IsGameActive := WinActive(TargetWindow)
+    IsGameActive := WinActive("ahk_group TargetGroup")
     IsSettingsActive := WinActive("ahk_id " MainGui.Hwnd)
     
     ShouldBeVisible := IsGameActive || IsSettingsActive
@@ -288,7 +291,7 @@ CheckWindowFocus() {
 
 ; --- Hotkeys ---
 
-#HotIf WinActive(TargetWindow)
+#HotIf WinActive("ahk_group TargetGroup")
 F1::ToggleFishing()
 
 ^!s::ToggleSettings()
