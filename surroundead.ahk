@@ -15,6 +15,7 @@ try TraySetIcon "shell32.dll", 42
 
 ; --- Global State ---
 Running := false
+SettingsOpen := false
 
 ; --- GUI Setup (Settings Window) ---
 ; --- Menu Setup ---
@@ -37,8 +38,8 @@ MainGui.Add("Button", "xm w125", "Reload Script").OnEvent("Click", (*) => Reload
 MainGui.Add("Button", "x+10 yp w125", "Close Script").OnEvent("Click", (*) => ExitApp())
 
 
-MainGui.OnEvent("Close", (*) => MainGui.Hide())
-MainGui.OnEvent("Escape", (*) => MainGui.Hide())
+MainGui.OnEvent("Close", (*) => (SettingsOpen := false, MainGui.Hide()))
+MainGui.OnEvent("Escape", (*) => (SettingsOpen := false, MainGui.Hide()))
 
 ; --- Tracker Box Setup ---
 TrackerGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
@@ -112,6 +113,8 @@ LogToGui(NewText) {
 DebugGui.Show("x" L_X " y" (OSD_H + Padding + 50) " NoActivate")
 if !DebugMode
     DebugGui.Hide()
+
+SetTimer CheckWindowFocus, 100
 
 ; Loop 91 {
 ;     LogToGui("Test line " . A_Index)
@@ -235,10 +238,12 @@ StartFishing() {
 }
 
 ToggleSettings() {
-    if WinExist("ahk_id " . MainGui.Hwnd)
-        MainGui.Hide()
-    else
+    global SettingsOpen
+    SettingsOpen := !SettingsOpen
+    if SettingsOpen
         MainGui.Show("x50 y50")
+    else
+        MainGui.Hide()
 }
 
 ToggleDebug(*) {
@@ -256,6 +261,31 @@ ToggleDebugFromSettings(*) {
         DebugGui.Hide()
     else
         DebugGui.Show("NoActivate")
+}
+
+CheckWindowFocus() {
+    ; Check if Game or Settings is active
+    IsGameActive := WinActive(TargetWindow)
+    IsSettingsActive := WinActive("ahk_id " MainGui.Hwnd)
+    
+    ShouldBeVisible := IsGameActive || IsSettingsActive
+    
+    if ShouldBeVisible {
+        if !WinExist("ahk_id " L_Gui.Hwnd) {
+             L_Gui.Show("NoActivate")
+             R_Gui.Show("NoActivate")
+             if DebugMode
+                DebugGui.Show("NoActivate")
+        }
+        if SettingsOpen && !WinExist("ahk_id " MainGui.Hwnd)
+            MainGui.Show("NoActivate")
+    } else {
+        L_Gui.Hide()
+        R_Gui.Hide()
+        DebugGui.Hide()
+        if WinExist("ahk_id " MainGui.Hwnd)
+            MainGui.Hide()
+    }
 }
 
 ; --- Hotkeys ---
