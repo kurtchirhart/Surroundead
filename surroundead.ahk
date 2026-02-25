@@ -41,8 +41,8 @@ MainGui.Add("Button", "xm w125", "Reload Script").OnEvent("Click", (*) => Reload
 MainGui.Add("Button", "x+10 yp w125", "Close Script").OnEvent("Click", (*) => ExitApp())
 
 
-MainGui.OnEvent("Close", (*) => (SettingsOpen := false, MainGui.Hide()))
-MainGui.OnEvent("Escape", (*) => (SettingsOpen := false, MainGui.Hide()))
+MainGui.OnEvent("Close", CloseSettings)
+MainGui.OnEvent("Escape", CloseSettings)
 
 ; --- Tracker Box Setup ---
 TrackerGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
@@ -244,10 +244,13 @@ StartFishing() {
 ToggleSettings() {
     global SettingsOpen
     SettingsOpen := !SettingsOpen
-    if SettingsOpen
-        MainGui.Show("x50 y50")
-    else
-        MainGui.Hide()
+    CheckWindowFocus()
+}
+
+CloseSettings(*) {
+    global SettingsOpen
+    SettingsOpen := false
+    MainGui.Hide()
 }
 
 ToggleDebug(*) {
@@ -268,11 +271,14 @@ ToggleDebugFromSettings(*) {
 }
 
 CheckWindowFocus() {
-    ; Check if Game or Settings is active
+    ; Check if Game, Settings, or any OSD window is active
     IsGameActive := WinActive("ahk_group TargetGroup")
     IsSettingsActive := WinActive("ahk_id " MainGui.Hwnd)
+    IsLActive := WinActive("ahk_id " L_Gui.Hwnd)
+    IsRActive := WinActive("ahk_id " R_Gui.Hwnd)
+    IsDebugActive := WinActive("ahk_id " DebugGui.Hwnd)
     
-    ShouldBeVisible := IsGameActive || IsSettingsActive
+    ShouldBeVisible := IsGameActive || IsSettingsActive || IsLActive || IsRActive || IsDebugActive
     
     if ShouldBeVisible {
         if !WinExist("ahk_id " L_Gui.Hwnd) {
@@ -281,8 +287,13 @@ CheckWindowFocus() {
              if DebugMode
                 DebugGui.Show("NoActivate")
         }
-        if SettingsOpen && !WinExist("ahk_id " MainGui.Hwnd)
-            MainGui.Show("NoActivate")
+        if SettingsOpen {
+            if !WinExist("ahk_id " MainGui.Hwnd)
+                MainGui.Show("x50 y50 NoActivate")
+        } else {
+            if WinExist("ahk_id " MainGui.Hwnd)
+                MainGui.Hide()
+        }
     } else {
         L_Gui.Hide()
         R_Gui.Hide()
